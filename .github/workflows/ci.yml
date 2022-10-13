@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - talview_changes
+      - talview_stable*
       - develop
     tags:
       - v*
