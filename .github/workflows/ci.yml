@@ -31,7 +31,36 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: Check out my lib-jitsi-meet
+      - name: Prepare
+        id: prep
+        run: |
+            DOCKER_IMAGE=ghcr.io/${{ github.repository }}/$IMAGE_NAME
+            DOCKER_IMAGE=$(echo $DOCKER_IMAGE | sed  -e 's:/*$::')
+            VERSION=noop
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              VERSION=nightly
+            elif [[ $GITHUB_REF == refs/tags/* ]]; then
+              VERSION=${GITHUB_REF#refs/tags/}
+            elif [[ $GITHUB_REF == refs/heads/* ]]; then
+              VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
+              if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
+                VERSION=latest
+              fi
+            elif [[ $GITHUB_REF == refs/pull/* ]]; then
+              VERSION=pr-${{ github.event.number }}
+            fi
+            TAGS="${DOCKER_IMAGE}:${VERSION}"
+            if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+              MINOR=${VERSION%.*}
+              MAJOR=${MINOR%.*}
+              TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
+            elif [ "${{ github.event_name }}" = "push" ]; then
+              TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
+            fi
+            echo ::set-output name=version::${VERSION}
+            echo ::set-output name=tags::${TAGS}
+            echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+      - name: Check out lib-jitsi-meet
         uses: actions/checkout@v3
         with:
           repository: talview/lib-jitsi-meet
@@ -43,3 +72,25 @@ jobs:
       - run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
           make && make source-package
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub packages
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          build-args: |
+            FB_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+            FB_API_DOMAIN=${{ secrets.FIREBASE_API_DOMAIN }}
+            LOKALISE_TOKEN=${{ secrets.LOKALISE_TOKEN }}
+            VERSION=${{ steps.prep.outputs.version }}
+          platforms: linux/amd64
+          tags: ${{ steps.prep.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
