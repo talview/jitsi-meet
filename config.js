@@ -255,7 +255,7 @@ var config = {
     // (no longer sent) until they are requested again. This is enabled by default. This must be enabled for screen
     // sharing to work as expected on Chrome. Disabling this might result in low resolution screenshare being sent
     // by the client.
-    // enableLayerSuspension: false,
+    enableLayerSuspension: true,
 
     // Every participant after the Nth will start video muted.
     // startVideoMuted: 10,
@@ -293,7 +293,7 @@ var config = {
     // Recording
 
     // DEPRECATED. Use recordingService.enabled instead.
-    // fileRecordingsEnabled: false,
+    fileRecordingsEnabled: true,
 
     // Enable the dropbox integration.
     // dropbox: {
@@ -461,23 +461,23 @@ var config = {
     //    // are the max.bitrates to be set on that particular type of stream. The actual send may vary based on
     //    // the available bandwidth calculated by the browser, but it will be capped by the values specified here.
     //    // This is currently not implemented on app based clients on mobile.
-    //    maxBitratesVideo: {
-    //          H264: {
-    //              low: 200000,
-    //              standard: 500000,
-    //              high: 1500000,
-    //          },
-    //          VP8 : {
-    //              low: 200000,
-    //              standard: 500000,
-    //              high: 1500000,
-    //          },
-    //          VP9: {
-    //              low: 100000,
-    //              standard: 300000,
-    //              high: 1200000,
-    //          },
-    //    },
+       maxBitratesVideo: {
+             H264: {
+                 low: 200000,
+                 standard: 500000,
+                 high: 1500000,
+             },
+             VP8 : {
+                 low: 200000,
+                 standard: 500000,
+                 high: 1500000,
+             },
+             VP9: {
+                 low: 100000,
+                 standard: 300000,
+                 high: 1200000,
+             },
+       },
     //
     //    // The options can be used to override default thresholds of video thumbnail heights corresponding to
     //    // the video quality levels used in the application. At the time of this writing the allowed levels are:
@@ -1014,7 +1014,7 @@ var config = {
 
     // DEPRECATED! Use `disabledSounds` instead.
     // Decides whether the start/stop recording audio notifications should play on record.
-    // disableRecordAudioNotification: false,
+    disableRecordAudioNotification: true,
 
     // DEPRECATED! Use `disabledSounds` instead.
     // Disables the sounds that play when other participants join or leave the
@@ -1088,7 +1088,7 @@ var config = {
     // Mainly privacy related settings
 
     // Disables all invite functions from the app (share, invite, dial out...etc)
-    // disableInviteFunctions: true,
+    disableInviteFunctions: true,
 
     // Disables storing the room name to the recents list. When in an iframe this is ignored and
     // the room is never stored in the recents list.

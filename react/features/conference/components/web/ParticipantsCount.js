@@ -80,11 +80,7 @@ class ParticipantsCount extends PureComponent<Props> {
         }
 
         return (
-            <Label
-                color = { COLORS.white }
-                icon = { IconUserGroups }
-                onClick = { this._onClick }
-                text = { count } />
+            <Label   text = ""/>
         );
     }
 }

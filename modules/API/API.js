@@ -575,35 +575,17 @@ function initCommands() {
 
             let recordingConfig;
 
-            if (mode === JitsiRecordingConstants.mode.FILE) {
-                if (dropboxToken) {
-                    recordingConfig = {
-                        mode: JitsiRecordingConstants.mode.FILE,
-                        appData: JSON.stringify({
-                            'file_recording_metadata': {
-                                'upload_credentials': {
-                                    'service_name': RECORDING_TYPES.DROPBOX,
-                                    'token': dropboxToken
-                                }
-                            }
-                        })
-                    };
-                } else {
-                    recordingConfig = {
-                        mode: JitsiRecordingConstants.mode.FILE,
-                        appData: JSON.stringify({
-                            'file_recording_metadata': {
-                                'share': shouldShare
-                            }
-                        })
-                    };
-                }
-            } else if (mode === JitsiRecordingConstants.mode.STREAM) {
+            if (mode === 'file') {
+
                 recordingConfig = {
-                    broadcastId: youtubeBroadcastID || rtmpBroadcastID,
-                    mode: JitsiRecordingConstants.mode.STREAM,
-                    streamId: youtubeStreamKey || rtmpStreamKey
+                    mode: 'file',
+                    appData: JSON.stringify({
+                        'file_recording_metadata': {
+                            'share': shouldShare
+                        }
+                    })
                 };
+
             } else {
                 logger.error('Invalid recording mode provided');
 
@@ -622,7 +604,7 @@ function initCommands() {
          * @param {string} mode - `file` or `stream`.
          * @returns {void}
          */
-        'stop-recording': mode => {
+        'stop-recording': ({mode }) => {
             const state = APP.store.getState();
             const conference = getCurrentConference(state);
 
@@ -632,11 +614,11 @@ function initCommands() {
                 return;
             }
 
-            if (![ JitsiRecordingConstants.mode.FILE, JitsiRecordingConstants.mode.STREAM ].includes(mode)) {
-                logger.error('Invalid recording mode provided!');
+            // if (![ JitsiRecordingConstants.mode.FILE, JitsiRecordingConstants.mode.STREAM ].includes(mode)) {
+            //     logger.error('Invalid recording mode provided!');
 
-                return;
-            }
+            //     return;
+            // }
 
             const activeSession = getActiveSession(state, mode);
 
@@ -839,6 +821,10 @@ function initCommands() {
             });
             break;
         }
+        case 'get-recording-status':{
+            callback(getRecordingStatus());
+            break;
+        }
         case 'list-breakout-rooms': {
             callback(getBreakoutRooms(APP.store.getState()));
             break;
@@ -849,6 +835,33 @@ function initCommands() {
 
         return true;
     });
+}
+
+
+/**
+ * Get recording status.
+ *
+ * @returns {string} - Status will be off,on or pending.
+ */
+function getRecordingStatus() {
+    const state = APP.store.getState();
+    const conference = getCurrentConference(state);
+
+    if (!conference) {
+        logger.error('Conference is not defined');
+
+        return;
+    }
+    const session = getActiveSession(state, 'file');
+
+    if (!session) {
+        logger.error('no active recording session');
+
+        return 'off';
+    }
+    logger.info(`Conference status= ${session.status}`);
+
+    return session.status;
 }
 
 /**

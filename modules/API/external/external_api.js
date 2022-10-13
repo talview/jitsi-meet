@@ -87,7 +87,8 @@ const commands = {
     toggleSubtitles: 'toggle-subtitles',
     toggleTileView: 'toggle-tile-view',
     toggleVirtualBackgroundDialog: 'toggle-virtual-background',
-    toggleVideo: 'toggle-video'
+    toggleVideo: 'toggle-video',
+    recordingStatus: 'recording-status'
 };
 
 /**
@@ -220,6 +221,7 @@ function parseArguments(args) {
             configOverwrite,
             interfaceConfigOverwrite,
             jwt,
+            startRecording,
             onload,
             lang
         ] = args;
@@ -232,6 +234,7 @@ function parseArguments(args) {
             configOverwrite,
             interfaceConfigOverwrite,
             jwt,
+            startRecording,
             onload,
             lang
         };
@@ -294,6 +297,8 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * configuration options defined in interface_config.js to be overridden.
      * @param {string} [options.jwt] - The JWT token if needed by jitsi-meet for
      * authentication.
+     * @param {string} [options.startRecording] - To start recording.
+
      * @param {string} [options.lang] - The meeting's default language.
      * @param {string} [options.onload] - The onload function that will listen
      * for iframe onload event.
@@ -317,6 +322,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
             configOverwrite = {},
             interfaceConfigOverwrite = {},
             jwt = undefined,
+            startRecording = true,
             lang = undefined,
             onload = undefined,
             invitees,
@@ -332,6 +338,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
             configOverwrite,
             interfaceConfigOverwrite,
             jwt,
+            startRecording,
             lang,
             roomName,
             devices,
@@ -922,6 +929,19 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
         return this._transport.sendRequest({
             name: 'invite',
             invitees
+        });
+    }
+
+
+    /**
+     * Returns the recording status.
+     *
+     * @returns {Promise} - Resolves with the recording status
+     * .
+     */
+     getRecordingStatus() {
+        return this._transport.sendRequest({
+            name: 'get-recording-status'
         });
     }
 

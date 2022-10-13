@@ -212,6 +212,7 @@ export default [
     'startAudioMuted',
     'startAudioOnly',
     'startLastN',
+    'startRecording',
     'startScreenSharing',
     'startSilent',
     'startVideoMuted',
