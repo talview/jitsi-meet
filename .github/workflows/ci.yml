@@ -1,25 +1,45 @@
-name: Simple CI
-
-on: [pull_request]
+name: CI
+on:
+  push:
+    branches:
+      - talview_changes
+      - develop
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - develop
+env:
+  # TODO: Change variable to your image'sI name.
+  REGISTRY: docker.pkg.github.com
+  IMAGE_NAME: jitsi-meet-web
 
 jobs:
-  run-ci:
-    name: Build Frontend
+  build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '16.x'
-    - run: npm install
-    - name: Check git status
-      run: git status
-    - name: Normalize lang files to ensure sorted
-      run: npm run lang-sort
-    - name: Check if the git repository is clean
-      run: $(exit $(git status --porcelain --untracked-files=no | head -255 | wc -l)) || (echo "Dirty git tree"; git diff; exit 1)
-    - run: npm run lint
-    - run: for file in lang/*.json; do npx --yes jsonlint -q $file || exit 1; done
-    - env:
-        NODE_OPTIONS: '--max-old-space-size=4096'  
-      run: make
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Repo metadata
+        id: repo
+        uses: actions/github-script@v3
+        with:
+         script: |
+           const repo = await github.repos.get(context.repo)
+           return repo.data
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Check out my lib-jitsi-meet
+        uses: actions/checkout@v3
+        with:
+          repository: talview/lib-jitsi-meet
+          ref: talview_changes
+          path: lib-jitsi-meet
+      - run: npm --prefix lib-jitsi-meet ci
+      - run: npm --prefix lib-jitsi-meet run build
+      - run: npm install
+      - run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          make && make source-package
