@@ -88,29 +88,29 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => async action => 
 
     switch (action.type) {
     case APP_WILL_MOUNT:
-        // dispatch(registerSound(
-        //     LIVE_STREAMING_OFF_SOUND_ID,
-        //     LIVE_STREAMING_OFF_SOUND_FILE));
+        dispatch(registerSound(
+            LIVE_STREAMING_OFF_SOUND_ID,
+            LIVE_STREAMING_OFF_SOUND_FILE));
 
-        // dispatch(registerSound(
-        //     LIVE_STREAMING_ON_SOUND_ID,
-        //     LIVE_STREAMING_ON_SOUND_FILE));
+        dispatch(registerSound(
+            LIVE_STREAMING_ON_SOUND_ID,
+            LIVE_STREAMING_ON_SOUND_FILE));
 
-        // dispatch(registerSound(
-        //     RECORDING_OFF_SOUND_ID,
-        //     RECORDING_OFF_SOUND_FILE));
+        dispatch(registerSound(
+            RECORDING_OFF_SOUND_ID,
+            RECORDING_OFF_SOUND_FILE));
 
-        // dispatch(registerSound(
-        //     RECORDING_ON_SOUND_ID,
-        //     RECORDING_ON_SOUND_FILE));
+        dispatch(registerSound(
+            RECORDING_ON_SOUND_ID,
+            RECORDING_ON_SOUND_FILE));
 
         break;
 
     case APP_WILL_UNMOUNT:
-        // dispatch(unregisterSound(LIVE_STREAMING_OFF_SOUND_ID));
-        // dispatch(unregisterSound(LIVE_STREAMING_ON_SOUND_ID));
-        // dispatch(unregisterSound(RECORDING_OFF_SOUND_ID));
-        // dispatch(unregisterSound(RECORDING_ON_SOUND_ID));
+        dispatch(unregisterSound(LIVE_STREAMING_OFF_SOUND_ID));
+        dispatch(unregisterSound(LIVE_STREAMING_ON_SOUND_ID));
+        dispatch(unregisterSound(RECORDING_OFF_SOUND_ID));
+        dispatch(unregisterSound(RECORDING_ON_SOUND_ID));
 
         break;
 
@@ -122,7 +122,7 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => async action => 
             recorderSession => {
                 if (recorderSession) {
                     recorderSession.getID() && dispatch(updateRecordingSessionData(recorderSession));
-                    // recorderSession.getError() && _showRecordingErrorNotification(recorderSession, dispatch);
+                    recorderSession.getError() && _showRecordingErrorNotification(recorderSession, dispatch);
                 }
 
                 return;
@@ -146,11 +146,11 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => async action => 
             if (localRecording?.notifyAllParticipants && !onlySelf) {
                 dispatch(playSound(RECORDING_ON_SOUND_ID));
             }
-            // dispatch(showNotification(props, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
-            // dispatch(showNotification({
-            //     titleKey: 'recording.localRecordingStartWarningTitle',
-            //     descriptionKey: 'recording.localRecordingStartWarning'
-            // }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
+            dispatch(showNotification(props, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
+            dispatch(showNotification({
+                titleKey: 'recording.localRecordingStartWarningTitle',
+                descriptionKey: 'recording.localRecordingStartWarning'
+            }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
             dispatch(updateLocalRecordingStatus(true, onlySelf));
             sendAnalytics(createRecordingEvent('started', `local${onlySelf ? '.self' : ''}`));
             if (typeof APP !== 'undefined') {
