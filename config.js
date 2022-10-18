@@ -732,7 +732,21 @@ var config = {
     //    'undock-iframe',
     //    'videoquality',
     // ],
-
+    toolbarButtons: [
+        'camera',
+        'chat',
+        'filmstrip',
+        'fullscreen',
+        'hangup',
+        'microphone',
+        'noisesuppression',
+        'raisehand',
+        'select-background',
+        'settings',
+        'tileview',
+        'toggle-camera',
+        'videoquality',
+    ],
     // Holds values related to toolbar visibility control.
     // toolbarConfig: {
     //     // Moved from interfaceConfig.INITIAL_TOOLBAR_TIMEOUT
