@@ -318,27 +318,27 @@ function _showRecordingErrorNotification(recorderSession, dispatch) {
 
     switch (error) {
     case JitsiMeetJS.constants.recording.error.SERVICE_UNAVAILABLE:
-        dispatch(showRecordingError({
-            descriptionKey: 'recording.unavailable',
-            descriptionArguments: {
-                serviceName: isStreamMode
-                    ? '$t(liveStreaming.serviceName)'
-                    : '$t(recording.serviceName)'
-            },
-            titleKey: isStreamMode
-                ? 'liveStreaming.unavailableTitle'
-                : 'recording.unavailableTitle'
-        }));
+        // dispatch(showRecordingError({
+        //     descriptionKey: 'recording.unavailable',
+        //     descriptionArguments: {
+        //         serviceName: isStreamMode
+        //             ? '$t(liveStreaming.serviceName)'
+        //             : '$t(recording.serviceName)'
+        //     },
+        //     titleKey: isStreamMode
+        //         ? 'liveStreaming.unavailableTitle'
+        //         : 'recording.unavailableTitle'
+        // }));
         break;
     case JitsiMeetJS.constants.recording.error.RESOURCE_CONSTRAINT:
-        dispatch(showRecordingError({
-            descriptionKey: isStreamMode
-                ? 'liveStreaming.busy'
-                : 'recording.busy',
-            titleKey: isStreamMode
-                ? 'liveStreaming.busyTitle'
-                : 'recording.busyTitle'
-        }));
+        // dispatch(showRecordingError({
+        //     descriptionKey: isStreamMode
+        //         ? 'liveStreaming.busy'
+        //         : 'recording.busy',
+        //     titleKey: isStreamMode
+        //         ? 'liveStreaming.busyTitle'
+        //         : 'recording.busyTitle'
+        // }));
         break;
     case JitsiMeetJS.constants.recording.error.UNEXPECTED_REQUEST:
         dispatch(showRecordingWarning({
@@ -349,14 +349,14 @@ function _showRecordingErrorNotification(recorderSession, dispatch) {
         }));
         break;
     default:
-        dispatch(showRecordingError({
-            descriptionKey: isStreamMode
-                ? 'liveStreaming.error'
-                : 'recording.error',
-            titleKey: isStreamMode
-                ? 'liveStreaming.failedToStart'
-                : 'recording.failedToStart'
-        }));
+        // dispatch(showRecordingError({
+        //     descriptionKey: isStreamMode
+        //         ? 'liveStreaming.error'
+        //         : 'recording.error',
+        //     titleKey: isStreamMode
+        //         ? 'liveStreaming.failedToStart'
+        //         : 'recording.failedToStart'
+        // }));
         break;
     }
 
