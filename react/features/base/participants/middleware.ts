@@ -115,7 +115,7 @@ MiddlewareRegistry.register(store => next => action => {
         const participant = getLocalParticipant(state);
         const dominantSpeaker = getDominantSpeakerParticipant(state);
         const isLocal = participant && participant.id === id;
-
+        console.log('+++++++++++DOMINANT_SPEAKER_CHANGED', id, isLocal, dominantSpeaker?.id)
         if (isLocal && dominantSpeaker?.id !== id
                 && hasRaisedHand(participant)
                 && !getDisableRemoveRaisedHandOnFocus(state)) {

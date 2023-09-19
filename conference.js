@@ -163,6 +163,7 @@ import { handleToggleVideoMuted } from './react/features/toolbox/actions.any';
 import { muteLocal } from './react/features/video-menu/actions.any';
 import { iAmVisitor } from './react/features/visitors/functions';
 import UIEvents from './service/UI/UIEvents';
+import _ from 'lodash';
 
 const logger = Logger.getLogger(__filename);
 
@@ -1787,6 +1788,33 @@ export default {
             JitsiConferenceEvents.DOMINANT_SPEAKER_CHANGED,
             (dominant, previous, silence) => {
                 APP.store.dispatch(dominantSpeakerChanged(dominant, previous, Boolean(silence), room));
+                if(_.get( config,'userInfo.isCandidate',false)) {
+                    let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
+                   
+                    const track = local_vid.stream.getVideoTracks()[0];
+                    console.log("==================DOMINANT_SPEAKER_CHANGED", track);
+                    try {
+                        let imageCapture = new ImageCapture(track);
+                        imageCapture.takePhoto()
+                            .then(blob => {
+                                console.log("==================imageCapture", blob);
+                                const reader = new FileReader()
+                                reader.onload = () => {
+                                    const base64data = reader.result
+                                    console.log(`========:${base64data}`)
+                                }
+                                reader.onerror = () => {
+                                    console.log('==========error')
+                                }
+                                reader.readAsDataURL(blob)
+                            })
+                            .catch(error => console.log(error));
+                    } catch (e) {
+                        console.log("==================imageCapture", e);
+                    }
+                }
+                // let imageCapture = new ImageCapture(track);
+                // console.log("==================imageCapture",imageCapture);
             });
 
         room.on(
@@ -2414,7 +2442,6 @@ export default {
         const videoDeviceCount
             = videoMediaDevices ? videoMediaDevices.length : 0;
         const localVideo = getLocalJitsiVideoTrack(APP.store.getState());
-
         // The video functionality is considered available if there are any
         // video devices detected or if there is local video stream already
         // active which could be either screensharing stream or a video track
@@ -2700,4 +2727,6 @@ export default {
 
         this._proxyConnection = null;
     }
+
+
 };
