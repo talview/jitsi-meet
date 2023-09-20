@@ -38,6 +38,7 @@ const commands = {
     displayName: 'display-name',
     endConference: 'end-conference',
     email: 'email',
+    faceAuth: 'face-auth',
     grantModerator: 'grant-moderator',
     hangup: 'video-hangup',
     hideNotification: 'hide-notification',
@@ -356,6 +357,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
             },
             release
         });
+
         this._createIFrame(height, width, onload, sandbox);
         this._transport = new Transport({
             backend: new PostMessageTransportBackend({

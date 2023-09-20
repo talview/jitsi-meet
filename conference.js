@@ -47,7 +47,7 @@ import {
 import {
     AVATAR_URL_COMMAND,
     CONFERENCE_LEAVE_REASONS,
-    EMAIL_COMMAND
+    EMAIL_COMMAND, FACE_AUTH_COMMAND
 } from './react/features/base/conference/constants';
 import {
     commonUserJoinedHandling,
@@ -165,6 +165,7 @@ import { iAmVisitor } from './react/features/visitors/functions';
 import UIEvents from './service/UI/UIEvents';
 import _ from 'lodash';
 import axios from 'axios';
+import { getFaceAuthSettings } from './react/features/base/settings/functions.web';
 
 const logger = Logger.getLogger(__filename);
 
@@ -189,7 +190,9 @@ const commands = {
     AVATAR_URL: AVATAR_URL_COMMAND,
     CUSTOM_ROLE: 'custom-role',
     EMAIL: EMAIL_COMMAND,
-    ETHERPAD: 'etherpad'
+    ETHERPAD: 'etherpad',
+    FACE_AUTH: FACE_AUTH_COMMAND
+
 };
 
 /**
@@ -226,7 +229,7 @@ function muteLocalVideo(muted) {
 
 function createCandidateAuth(){
     // if(  _.get( config,'userInfo.isCandidate',false)) {
-    console.log("==================createCandidateAuth",_.get( config,'userInfo',false));
+    console.log("==================createCandidateAuth",getFaceAuthSettings(APP.store.getState()));
     if(true) {
         let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
 
@@ -2612,6 +2615,19 @@ export default {
         }));
 
         sendData(commands.EMAIL, formattedEmail);
+    },
+
+    /**
+     * Changes the email for the local user
+     * @param data {string} the new email
+     */
+    changeFaceAuthSettings(data = '') {
+
+        APP.store.dispatch(updateSettings({
+            faceAuth: data
+        }));
+
+        // sendData(commandsmands.FACE_AUTH, data);
     },
 
     /**

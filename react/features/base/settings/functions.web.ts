@@ -60,6 +60,16 @@ export function getDisplayName(state: IReduxState): string {
     return state['features/base/settings'].displayName || '';
 }
 
+
+/**
+ * Returns the saved display name.
+ *
+ * @param {Object} state - The state of the application.
+ * @returns {string}
+ */
+export function getFaceAuthSettings(state: IReduxState): string {
+    return state['features/base/settings'].faceAuth || null;
+}
 /**
  * Searches known devices for a matching deviceId and fall back to matching on
  * label. Returns the stored preferred cameraDeviceId if a match is not found.

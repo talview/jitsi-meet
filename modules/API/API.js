@@ -492,6 +492,10 @@ function initCommands() {
             sendAnalytics(createApiEvent('email.changed'));
             APP.conference.changeLocalEmail(email);
         },
+        'face-auth': data => {
+        // sendAnalytics(createApiEvent('face-auth.data'));
+        APP.conference.changeFaceAuthSettings(data);
+        },
         'avatar-url': avatarUrl => {
             sendAnalytics(createApiEvent('avatar.url.changed'));
             APP.conference.changeLocalAvatarUrl(avatarUrl);
