@@ -1628,7 +1628,7 @@ var config = {
     //     // The proxy server url for giphy requests in the web app.
     //     proxyUrl: 'https://giphy-proxy.example.com',
     // },
-
+    graphQlUrl: 'https://top-api.talview.org/v1/graphql',
     // Logging
     // logging: {
     //      // Default log level for the app and lib-jitsi-meet.

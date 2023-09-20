@@ -164,6 +164,7 @@ import { muteLocal } from './react/features/video-menu/actions.any';
 import { iAmVisitor } from './react/features/visitors/functions';
 import UIEvents from './service/UI/UIEvents';
 import _ from 'lodash';
+import axios from 'axios';
 
 const logger = Logger.getLogger(__filename);
 
@@ -220,6 +221,96 @@ function muteLocalAudio(muted) {
  */
 function muteLocalVideo(muted) {
     APP.store.dispatch(setVideoMuted(muted));
+}
+
+
+function createCandidateAuth(){
+    // if(  _.get( config,'userInfo.isCandidate',false)) {
+    console.log("==================createCandidateAuth",_.get( config,'userInfo',false));
+    if(true) {
+        let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
+
+        const track = local_vid.stream.getVideoTracks()[0];
+        console.log("==================DOMINANT_SPEAKER_CHANGED", track);
+        try {
+            let imageCapture = new ImageCapture(track);
+            imageCapture.takePhoto()
+                .then(blob => {
+                    console.log("==================imageCapture g url",config.graphQlUrl );
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                        const base64data = reader.result
+                        console.log(`========:${base64data}`)
+                        createAuthRequest(179,base64data,'test.jpg')
+                    }
+                    reader.onerror = () => {
+                        console.log('==========error')
+                    }
+                    reader.readAsDataURL(blob)
+                })
+                .catch(error => console.log(error));
+        } catch (e) {
+            console.log("==================imageCapture", e);
+        }
+    }
+}
+
+function createAuthRequest(user_id,file_data,file_name){
+
+    let data = JSON.stringify({
+        query: `mutation createFaceAuthRequest($file: String!, $file_name: String!, $candidate_old_id: Int, $description: String) {
+          ca_create_auth_request(
+              file: $file
+              file_name: $file_name
+              candidate_old_id: $candidate_old_id
+              description: $description
+          ) {
+              data
+              error_message
+              success
+            }
+          }`,
+        variables: {"candidate_old_id":179,"file":file_data,"file_name":file_name,"description":"session mid way check"}
+    });
+
+
+
+    let options = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: config.graphQlUrl,
+        headers: { 'content-type': 'application/json'},
+        data : data
+    };
+
+    axios.request(options)
+        .then((response) => {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+
+}
+
+function createCandidateProfile(email,org_id,user_id){
+    var options = {
+        method: 'POST',
+        url: config.graphQlUrl,
+        headers: {'Content-Type': 'application/json'},
+        data: '{"query":"mutation LiveSessionCreateCAProfile ' +
+            '{\n  ca_create_profile(candidate_email: \"'+email+'\",' +
+            'org_id: '+org_id+', candidate_old_id:'+user_id+')' +
+            ' {\n    data\n    error_message\n    success\n  }\n}",' +
+            '"operationName":"LiveSessionCreateProfile"}'
+    };
+
+    axios.request(options).then(function (response) {
+        console.log(response.data);
+    }).catch(function (error) {
+        console.error(error);
+    });
+
 }
 
 /**
@@ -1788,31 +1879,7 @@ export default {
             JitsiConferenceEvents.DOMINANT_SPEAKER_CHANGED,
             (dominant, previous, silence) => {
                 APP.store.dispatch(dominantSpeakerChanged(dominant, previous, Boolean(silence), room));
-                if(_.get( config,'userInfo.isCandidate',false)) {
-                    let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
-                   
-                    const track = local_vid.stream.getVideoTracks()[0];
-                    console.log("==================DOMINANT_SPEAKER_CHANGED", track);
-                    try {
-                        let imageCapture = new ImageCapture(track);
-                        imageCapture.takePhoto()
-                            .then(blob => {
-                                console.log("==================imageCapture", blob);
-                                const reader = new FileReader()
-                                reader.onload = () => {
-                                    const base64data = reader.result
-                                    console.log(`========:${base64data}`)
-                                }
-                                reader.onerror = () => {
-                                    console.log('==========error')
-                                }
-                                reader.readAsDataURL(blob)
-                            })
-                            .catch(error => console.log(error));
-                    } catch (e) {
-                        console.log("==================imageCapture", e);
-                    }
-                }
+                createCandidateAuth();
                 // let imageCapture = new ImageCapture(track);
                 // console.log("==================imageCapture",imageCapture);
             });

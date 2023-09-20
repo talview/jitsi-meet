@@ -419,6 +419,7 @@ export interface IConfig {
         sdkKey?: string;
         tileTime?: number;
     };
+    graphQlUrl?: string;
     googleApiApplicationClientID?: string;
     gravatar?: {
         baseUrl?: string;

@@ -162,6 +162,7 @@ export default [
     'forceTurnRelay',
     'gatherStats',
     'giphy',
+    'graphQlUrl',
     'googleApiApplicationClientID',
     'gravatar.disabled',
     'hiddenPremeetingButtons',
