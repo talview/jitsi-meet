@@ -25,6 +25,7 @@ const DEFAULT_STATE: ISettingsState = {
     displayName: undefined,
     email: undefined,
     faceAuth: undefined,
+    faceAuthAttempt: undefined,
     localFlipX: true,
     maxStageParticipants: 1,
     micDeviceId: undefined,
@@ -64,6 +65,7 @@ export interface ISettingsState {
     displayName?: string;
     email?: string;
     faceAuth?: string;
+    faceAuthAttempt?: string;
     hideShareAudioHelper?: boolean;
     localFlipX?: boolean;
     maxStageParticipants?: number;

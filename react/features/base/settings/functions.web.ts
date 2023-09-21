@@ -62,13 +62,23 @@ export function getDisplayName(state: IReduxState): string {
 
 
 /**
- * Returns the saved display name.
+ * Returns the saved faceAuth data.
  *
  * @param {Object} state - The state of the application.
  * @returns {string}
  */
 export function getFaceAuthSettings(state: IReduxState): string {
     return state['features/base/settings'].faceAuth || `{}`;
+}
+
+/**
+ * Returns the saved faceAuthAttempt.
+ *
+ * @param {Object} state - The state of the application.
+ * @returns {string}
+ */
+export function getFaceAuthAttemptSettings(state: IReduxState): string {
+    return state['features/base/settings'].faceAuthAttempt || `{}`;
 }
 /**
  * Searches known devices for a matching deviceId and fall back to matching on

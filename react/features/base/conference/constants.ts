@@ -14,6 +14,8 @@ export const EMAIL_COMMAND = 'email';
 
 export  const FACE_AUTH_COMMAND = 'face-auth';
 
+export  const FACE_AUTH_ATTEMPT_COMMAND = 'face-auth-attempt';
+
 /**
  * The name of the {@code JitsiConference} property which identifies the URL of
  * the conference represented by the {@code JitsiConference} instance.

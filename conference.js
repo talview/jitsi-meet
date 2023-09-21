@@ -165,7 +165,7 @@ import { iAmVisitor } from './react/features/visitors/functions';
 import UIEvents from './service/UI/UIEvents';
 import _ from 'lodash';
 import axios from 'axios';
-import { getFaceAuthSettings } from './react/features/base/settings/functions.web';
+import { getFaceAuthAttemptSettings, getFaceAuthSettings } from './react/features/base/settings/functions.web';
 
 const logger = Logger.getLogger(__filename);
 
@@ -231,10 +231,22 @@ function createCandidateAuth(){
     const state = APP.store.getState();
     try {
         const face_auth_data = JSON.parse(getFaceAuthSettings(APP.store.getState()))
-        console.log("==================face_auth_data ", face_auth_data);
+        const face_auth_attempt = JSON.parse(getFaceAuthAttemptSettings(APP.store.getState()))
+        const room_name=room.getName()
+        console.log("CA-  face_auth_data ", face_auth_data);
+        console.log("CA-  face_auth_attempt ", face_auth_attempt);
+        console.log("CA-  graphQlUrl ", config.graphQlUrl);
         if (_.get(face_auth_data, 'isCandidate', false)
-            && _.get(face_auth_data, 'live_session_name', '') === room.getName()) {
-            if (true) {
+            && _.get(face_auth_data, 'live_session_name', '') === room_name) {
+            const tracks = APP.store.getState()['features/base/tracks'];
+            const duration = getLocalVideoTrack(tracks)?.jitsiTrack.getDuration() ?? 0;
+            console.log( "CA- Session duration",duration);
+            if ( duration > 120 && (_.get(face_auth_attempt, 'status-'+room_name, '') !== 'completed')
+                &&  (_.parseInt(_.get(face_auth_attempt, 'attempt-'+room_name, '0')) < 1) ) {
+
+                const face_auth_attempt_count=(_.parseInt(_.get(face_auth_attempt, 'attempt-'+room_name, '0')) + 1)
+                updateFaceAuthAttempt(room_name, face_auth_attempt_count,"in-progress");
+
                 let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
 
                 const track = local_vid.stream.getVideoTracks()[0];
@@ -245,31 +257,46 @@ function createCandidateAuth(){
                         const reader = new FileReader()
                         reader.onload = () => {
                             const base64data = reader.result
+                            console.log('CA- base64data', base64data)
+
                             // createAuthRequest(179, base64data, 'test.jpg')
                             createCandidateProfile(
                                 _.get(face_auth_data, 'email_id', ),
                                 _.get(face_auth_data, 'org_id', ),
                                 _.get(face_auth_data, 'userId' ),
-                                base64data,'test.jpg')
+                                base64data,'test.jpg',
+                                face_auth_attempt_count,room_name)
                         }
                         reader.onerror = () => {
-                            console.log('==========error')
+                            console.log('CA- failed to render base64')
+                            updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
+
                         }
                         reader.readAsDataURL(blob)
                     })
                     .catch(error => console.log(error));
+
+            }else{
+                console.log("CA- face auth attempt already completed or session duration is less than 2 minute");
+                updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
 
             }
         }
     }
     catch (e)
     {
-        console.log("==================imageCapture", e);
+        console.log("CA- imageCapture error", e);
     }
 
 }
 
-function createAuthRequest(user_id,file_data,file_name){
+function updateFaceAuthAttempt(room_name, face_auth_attempt_count,status) {
+    APP.store.dispatch(updateSettings({
+        faceAuthAttempt: `{"attempt-${room_name}": "${face_auth_attempt_count}","status-${room_name}":${status}}`
+    }));
+}
+
+function createAuthRequest(user_id,file_data,file_name,face_auth_attempt_count,room_name){
 
     let data = JSON.stringify({
         query: `mutation createFaceAuthRequest($file: String!, $file_name: String!, $candidate_id: Int, $description: String) {
@@ -299,15 +326,18 @@ function createAuthRequest(user_id,file_data,file_name){
 
     axios.request(options)
         .then((response) => {
-            console.log("Auth request created",JSON.stringify(response.data));
+            console.log("CA- Auth request created: ",JSON.stringify(response.data));
+            updateFaceAuthAttempt(room_name, face_auth_attempt_count,"completed");
+
         })
         .catch((error) => {
-            console.log(error);
+            console.log('CA- Auth request  error;  ',error);
+            updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
         });
 
 }
 
-function createCandidateProfile(email,org_id,user_id,file_data,file_name){
+function createCandidateProfile(email,org_id,user_id,file_data,file_name,face_auth_attempt_count,room_name){
     var options = {
         method: 'POST',
         url: config.graphQlUrl,
@@ -332,12 +362,14 @@ function createCandidateProfile(email,org_id,user_id,file_data,file_name){
 
         console.log(response.data);
         if(_.get( response,'data.data.ca_create_profile.success')=== true){
-            console.log("============success");
+            console.log("CA- create profile success");
             createAuthRequest( _.parseInt(_.get( response,'data.data.ca_create_profile.data.candidate_id'))
-            ,file_data,file_name)
+            ,file_data,file_name,face_auth_attempt_count,room_name)
         }
     }).catch(function (error) {
-        console.error(error);
+        console.error("CA- create profile error",  error);
+        updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
+
     });
 
 }
@@ -1569,6 +1601,7 @@ export default {
         const tracks = APP.store.getState()['features/base/tracks'];
         const duration = getLocalVideoTrack(tracks)?.jitsiTrack.getDuration() ?? 0;
 
+
         // If system audio was also shared stop the AudioMixerEffect and dispose of the desktop audio track.
         if (this._mixerEffect) {
             const localAudio = getLocalJitsiAudioTrack(APP.store.getState());
@@ -1908,6 +1941,7 @@ export default {
             JitsiConferenceEvents.DOMINANT_SPEAKER_CHANGED,
             (dominant, previous, silence) => {
                 APP.store.dispatch(dominantSpeakerChanged(dominant, previous, Boolean(silence), room));
+
                 createCandidateAuth();
                 // let imageCapture = new ImageCapture(track);
                 // console.log("==================imageCapture",imageCapture);
@@ -2655,6 +2689,7 @@ export default {
 
         // sendData(commandsmands.FACE_AUTH, data);
     },
+
 
     /**
      * Changes the avatar url for the local user
