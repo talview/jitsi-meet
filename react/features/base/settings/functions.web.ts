@@ -68,7 +68,7 @@ export function getDisplayName(state: IReduxState): string {
  * @returns {string}
  */
 export function getFaceAuthSettings(state: IReduxState): string {
-    return state['features/base/settings'].faceAuth || null;
+    return state['features/base/settings'].faceAuth || `{}`;
 }
 /**
  * Searches known devices for a matching deviceId and fall back to matching on

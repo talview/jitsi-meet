@@ -228,44 +228,55 @@ function muteLocalVideo(muted) {
 
 
 function createCandidateAuth(){
-    // if(  _.get( config,'userInfo.isCandidate',false)) {
-    console.log("==================createCandidateAuth",getFaceAuthSettings(APP.store.getState()));
-    if(true) {
-        let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
+    const state = APP.store.getState();
+    try {
+        const face_auth_data = JSON.parse(getFaceAuthSettings(APP.store.getState()))
+        console.log("==================face_auth_data ", face_auth_data);
+        if (_.get(face_auth_data, 'isCandidate', false)
+            && _.get(face_auth_data, 'live_session_name', '') === room.getName()) {
+            if (true) {
+                let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
 
-        const track = local_vid.stream.getVideoTracks()[0];
-        console.log("==================DOMINANT_SPEAKER_CHANGED", track);
-        try {
-            let imageCapture = new ImageCapture(track);
-            imageCapture.takePhoto()
-                .then(blob => {
-                    console.log("==================imageCapture g url",config.graphQlUrl );
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                        const base64data = reader.result
-                        console.log(`========:${base64data}`)
-                        createAuthRequest(179,base64data,'test.jpg')
-                    }
-                    reader.onerror = () => {
-                        console.log('==========error')
-                    }
-                    reader.readAsDataURL(blob)
-                })
-                .catch(error => console.log(error));
-        } catch (e) {
-            console.log("==================imageCapture", e);
+                const track = local_vid.stream.getVideoTracks()[0];
+
+                let imageCapture = new ImageCapture(track);
+                imageCapture.takePhoto()
+                    .then(blob => {
+                        const reader = new FileReader()
+                        reader.onload = () => {
+                            const base64data = reader.result
+                            // createAuthRequest(179, base64data, 'test.jpg')
+                            createCandidateProfile(
+                                _.get(face_auth_data, 'email_id', ),
+                                _.get(face_auth_data, 'org_id', ),
+                                _.get(face_auth_data, 'userId' ),
+                                base64data,'test.jpg')
+                        }
+                        reader.onerror = () => {
+                            console.log('==========error')
+                        }
+                        reader.readAsDataURL(blob)
+                    })
+                    .catch(error => console.log(error));
+
+            }
         }
     }
+    catch (e)
+    {
+        console.log("==================imageCapture", e);
+    }
+
 }
 
 function createAuthRequest(user_id,file_data,file_name){
 
     let data = JSON.stringify({
-        query: `mutation createFaceAuthRequest($file: String!, $file_name: String!, $candidate_old_id: Int, $description: String) {
+        query: `mutation createFaceAuthRequest($file: String!, $file_name: String!, $candidate_id: Int, $description: String) {
           ca_create_auth_request(
               file: $file
               file_name: $file_name
-              candidate_old_id: $candidate_old_id
+              candidate_id: $candidate_id
               description: $description
           ) {
               data
@@ -273,7 +284,7 @@ function createAuthRequest(user_id,file_data,file_name){
               success
             }
           }`,
-        variables: {"candidate_old_id":179,"file":file_data,"file_name":file_name,"description":"session mid way check"}
+        variables: {"candidate_id":user_id,"file":file_data,"file_name":file_name,"description":"session mid way check"}
     });
 
 
@@ -288,7 +299,7 @@ function createAuthRequest(user_id,file_data,file_name){
 
     axios.request(options)
         .then((response) => {
-            console.log(JSON.stringify(response.data));
+            console.log("Auth request created",JSON.stringify(response.data));
         })
         .catch((error) => {
             console.log(error);
@@ -296,20 +307,35 @@ function createAuthRequest(user_id,file_data,file_name){
 
 }
 
-function createCandidateProfile(email,org_id,user_id){
+function createCandidateProfile(email,org_id,user_id,file_data,file_name){
     var options = {
         method: 'POST',
         url: config.graphQlUrl,
         headers: {'Content-Type': 'application/json'},
-        data: '{"query":"mutation LiveSessionCreateCAProfile ' +
-            '{\n  ca_create_profile(candidate_email: \"'+email+'\",' +
-            'org_id: '+org_id+', candidate_old_id:'+user_id+')' +
-            ' {\n    data\n    error_message\n    success\n  }\n}",' +
-            '"operationName":"LiveSessionCreateProfile"}'
+        data : JSON.stringify({
+            query: `mutation LiveSessionCreateCAProfile($candidate_email: String!, $org_id: Int!, $candidate_old_id: Int) {
+             ca_create_profile(
+                candidate_email: $candidate_email
+                org_id: $org_id
+                candidate_old_id: $candidate_old_id)
+             {
+                data
+                error_message
+                success
+               }
+            }`,
+            variables: {"candidate_email":email,"org_id":org_id,"candidate_old_id":user_id}
+        })
     };
 
     axios.request(options).then(function (response) {
+
         console.log(response.data);
+        if(_.get( response,'data.data.ca_create_profile.success')=== true){
+            console.log("============success");
+            createAuthRequest( _.parseInt(_.get( response,'data.data.ca_create_profile.data.candidate_id'))
+            ,file_data,file_name)
+        }
     }).catch(function (error) {
         console.error(error);
     });
