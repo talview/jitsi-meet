@@ -236,7 +236,6 @@ function createCandidateAuth(){
         const face_auth_attempt = JSON.parse(getFaceAuthAttemptSettings(APP.store.getState()))
         console.log("CA-  face_auth_data ", face_auth_data);
         console.log("CA-  face_auth_attempt ", face_auth_attempt);
-        console.log("CA-  graphQlUrl ", config.graphQlUrl);
         if (_.get(face_auth_data, 'isCandidate', false)
             && _.get(face_auth_data, 'live_session_name', '') === room_name) {
             const tracks = APP.store.getState()['features/base/tracks'];
