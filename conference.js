@@ -229,6 +229,7 @@ function muteLocalVideo(muted) {
 
 function createCandidateAuth(){
     const state = APP.store.getState();
+    let face_auth_attempt_count =0
     try {
         const face_auth_data = JSON.parse(getFaceAuthSettings(APP.store.getState()))
         const face_auth_attempt = JSON.parse(getFaceAuthAttemptSettings(APP.store.getState()))
@@ -241,44 +242,63 @@ function createCandidateAuth(){
             const tracks = APP.store.getState()['features/base/tracks'];
             const duration = getLocalVideoTrack(tracks)?.jitsiTrack.getDuration() ?? 0;
             console.log( "CA- Session duration",duration);
-            if ( duration > 120 && (_.get(face_auth_attempt, 'status-'+room_name, '') !== 'completed')
+            if ( duration > 120 && ((_.get(face_auth_attempt, 'status-'+room_name, '') !== 'completed')
+                || (_.get(face_auth_attempt, 'status-'+room_name, '') !== 'in-progress'))
                 &&  (_.parseInt(_.get(face_auth_attempt, 'attempt-'+room_name, '0')) < 1) ) {
 
-                const face_auth_attempt_count=(_.parseInt(_.get(face_auth_attempt, 'attempt-'+room_name, '0')) + 1)
+                face_auth_attempt_count =(_.parseInt(_.get(face_auth_attempt, 'attempt-'+room_name, '0')) + 1)
                 updateFaceAuthAttempt(room_name, face_auth_attempt_count,"in-progress");
 
                 let local_vid = getLocalJitsiVideoTrack(APP.store.getState());
 
                 const track = local_vid.stream.getVideoTracks()[0];
+                console.log('CA- local video got');
+                const constraints = {
+                    video: {
+                        width: { max: 320 }, // Set the maximum width
+                        height: { max: 300 }, // Set the maximum height
+                    },
+                };
+                track.applyConstraints(constraints)
+                    .then(() => {
+                        console.log('CA- applyConstraints success');
+                        let imageCapture = new ImageCapture(track);
+                        imageCapture.takePhoto()
+                            .then(blob => {
 
-                let imageCapture = new ImageCapture(track);
-                imageCapture.takePhoto()
-                    .then(blob => {
-                        const reader = new FileReader()
-                        reader.onload = () => {
-                            const base64data = reader.result
-                            console.log('CA- base64data', base64data)
+                                resizeImageBlob(blob, 320, 240).then(resizedBlob => {
+                                    console.log('CA- resizedBlob', resizedBlob)
+                                    blob = resizedBlob;
+                                    const reader = new FileReader()
+                                    reader.onload = () => {
+                                        const base64data = reader.result
+                                        console.log('CA- base64data', base64data)
 
-                            // createAuthRequest(179, base64data, 'test.jpg')
-                            createCandidateProfile(
-                                _.get(face_auth_data, 'email_id', ),
-                                _.get(face_auth_data, 'org_id', ),
-                                _.get(face_auth_data, 'userId' ),
-                                base64data,'test.jpg',
-                                face_auth_attempt_count,room_name)
-                        }
-                        reader.onerror = () => {
-                            console.log('CA- failed to render base64')
-                            updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
+                                        // createAuthRequest(179, base64data, 'test.jpg')
+                                        createCandidateProfile(
+                                            _.get(face_auth_data, 'email_id', ),
+                                            _.get(face_auth_data, 'org_id', ),
+                                            _.get(face_auth_data, 'userId' ),
+                                            base64data,'test.jpg',
+                                            face_auth_attempt_count,room_name,_.get(face_auth_data, 'live_session_name', ''))
+                                    }
+                                    reader.onerror = () => {
+                                        console.log('CA- failed to render base64')
+                                        updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
 
-                        }
-                        reader.readAsDataURL(blob)
+                                    }
+                                    reader.readAsDataURL(blob)
+                                })
+
+                            })
+                            .catch(error => console.log(error));
                     })
                     .catch(error => console.log(error));
 
+
+
             }else{
                 console.log("CA- face auth attempt already completed or session duration is less than 2 minute");
-                updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
 
             }
         }
@@ -286,17 +306,18 @@ function createCandidateAuth(){
     catch (e)
     {
         console.log("CA- imageCapture error", e);
+        updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
     }
 
 }
 
 function updateFaceAuthAttempt(room_name, face_auth_attempt_count,status) {
     APP.store.dispatch(updateSettings({
-        faceAuthAttempt: `{"attempt-${room_name}": "${face_auth_attempt_count}","status-${room_name}":${status}}`
+        faceAuthAttempt: `{"attempt-${room_name}": "${face_auth_attempt_count}","status-${room_name}":"${status}"}`
     }));
 }
 
-function createAuthRequest(user_id,file_data,file_name,face_auth_attempt_count,room_name){
+function createAuthRequest(user_id,file_data,file_name,face_auth_attempt_count,room_name,live_session_id){
 
     let data = JSON.stringify({
         query: `mutation createFaceAuthRequest($file: String!, $file_name: String!, $candidate_id: Int, $description: String) {
@@ -311,7 +332,7 @@ function createAuthRequest(user_id,file_data,file_name,face_auth_attempt_count,r
               success
             }
           }`,
-        variables: {"candidate_id":user_id,"file":file_data,"file_name":file_name,"description":"session mid way check"}
+        variables: {"candidate_id":user_id,"file":file_data,"file_name":file_name,"description":"{\"live_session_id\":\""+live_session_id+"\",\"event\":\"session mid way check\"}"}
     });
 
 
@@ -337,7 +358,7 @@ function createAuthRequest(user_id,file_data,file_name,face_auth_attempt_count,r
 
 }
 
-function createCandidateProfile(email,org_id,user_id,file_data,file_name,face_auth_attempt_count,room_name){
+function createCandidateProfile(email,org_id,user_id,file_data,file_name,face_auth_attempt_count,room_name,live_session_id){
     var options = {
         method: 'POST',
         url: config.graphQlUrl,
@@ -364,7 +385,7 @@ function createCandidateProfile(email,org_id,user_id,file_data,file_name,face_au
         if(_.get( response,'data.data.ca_create_profile.success')=== true){
             console.log("CA- create profile success");
             createAuthRequest( _.parseInt(_.get( response,'data.data.ca_create_profile.data.candidate_id'))
-            ,file_data,file_name,face_auth_attempt_count,room_name)
+            ,file_data,file_name,face_auth_attempt_count,room_name,live_session_id)
         }
     }).catch(function (error) {
         console.error("CA- create profile error",  error);
@@ -372,6 +393,41 @@ function createCandidateProfile(email,org_id,user_id,file_data,file_name,face_au
 
     });
 
+}
+
+
+function resizeImageBlob(blob, maxWidth, maxHeight) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(blob);
+
+        img.onload = () => {
+            const width = img.width;
+            const height = img.height;
+            const aspectRatio = width / height;
+
+            if (width <= maxWidth && height <= maxHeight) {
+                resolve(blob); // No need to resize if it's already within the specified dimensions
+            } else {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                if (aspectRatio > 1) {
+                    canvas.width = maxWidth;
+                    canvas.height = maxWidth / aspectRatio;
+                } else {
+                    canvas.width = maxHeight * aspectRatio;
+                    canvas.height = maxHeight;
+                }
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob(resolve, 'image/jpeg'); // You can change the format as needed (e.g., 'image/png')
+            }
+        };
+
+        img.onerror = error => reject(error);
+    });
 }
 
 /**
