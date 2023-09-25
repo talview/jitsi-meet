@@ -230,10 +230,10 @@ function muteLocalVideo(muted) {
 function createCandidateAuth(){
     const state = APP.store.getState();
     let face_auth_attempt_count =0
+    const room_name=room.getName();
     try {
         const face_auth_data = JSON.parse(getFaceAuthSettings(APP.store.getState()))
         const face_auth_attempt = JSON.parse(getFaceAuthAttemptSettings(APP.store.getState()))
-        const room_name=room.getName()
         console.log("CA-  face_auth_data ", face_auth_data);
         console.log("CA-  face_auth_attempt ", face_auth_attempt);
         console.log("CA-  graphQlUrl ", config.graphQlUrl);
