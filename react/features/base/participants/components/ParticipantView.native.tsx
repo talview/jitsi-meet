@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import ViewShot from 'react-native-view-shot';
+
 import { GestureResponderEvent, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -124,7 +126,38 @@ interface IProps {
  * @augments Component
  */
 class ParticipantView extends Component<IProps> {
+    screenshotTimer = null;
+    viewShotRef = React.createRef();
+    captureScreenshot = () => {
+        if (this.viewShotRef.current) {
+            this.viewShotRef.current.capture().then(uri => {
+                // `uri` contains the URI of the captured screenshot
+                // You can save it or send it as needed
+                console.log('CA- Screenshot captured:', uri);
+            });
+        }
+    };
 
+    componentDidMount() {
+        console.log('CA- componentDidMount');
+        // Capture a screenshot initially when the component mounts
+        try{
+            this.captureScreenshot();
+        } catch (e:any) {
+            console.log('CA- error====', e);
+        }
+        // this.captureScreenshot();
+
+        // Set up a timer to capture screenshots every 5 minutes (300,000 milliseconds)
+        this.screenshotTimer = setInterval(this.captureScreenshot, 120000);
+    }
+
+    componentWillUnmount() {
+        // Clear the timer when the component is unmounted to avoid memory leaks
+        if (this.screenshotTimer) {
+            clearInterval(this.screenshotTimer);
+        }
+    }
     /**
      * Renders the inactive connection status label.
      *

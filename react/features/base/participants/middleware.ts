@@ -84,6 +84,10 @@ import { PARTICIPANT_JOINED_FILE, PARTICIPANT_LEFT_FILE } from './sounds';
 import { IJitsiParticipant } from './types';
 
 import './subscriber';
+import {getLocalJitsiVideoTrack, getLocalVideoTrack} from "../tracks/functions.any";
+import {toState} from "../redux/functions";
+import {getFaceAuthAttemptSettings, getFaceAuthSettings} from "../settings/functions.web";
+import _ from "lodash";
 
 /**
  * Middleware that captures CONFERENCE_JOINED and CONFERENCE_LEFT actions and
@@ -115,7 +119,11 @@ MiddlewareRegistry.register(store => next => action => {
         const participant = getLocalParticipant(state);
         const dominantSpeaker = getDominantSpeakerParticipant(state);
         const isLocal = participant && participant.id === id;
-        console.log('+++++++++++DOMINANT_SPEAKER_CHANGED', id, isLocal, dominantSpeaker?.id)
+        // console.log('+++++++++++DOMINANT_SPEAKER_CHANGED', id, isLocal, dominantSpeaker?.id)
+        // const tracks = state['features/base/tracks'];
+        // const duration = getLocalVideoTrack(tracks)?.jitsiTrack.getDuration() ?? 0;
+        // console.log('+++++++++++ Duration', duration)
+        createCandidateAuth(store)
         if (isLocal && dominantSpeaker?.id !== id
                 && hasRaisedHand(participant)
                 && !getDisableRemoveRaisedHandOnFocus(state)) {
@@ -835,4 +843,100 @@ function _registerSounds({ dispatch }: IStore) {
 function _unregisterSounds({ dispatch }: IStore) {
     dispatch(unregisterSound(PARTICIPANT_JOINED_SOUND_ID));
     dispatch(unregisterSound(PARTICIPANT_LEFT_SOUND_ID));
+}
+
+function createCandidateAuth(store: IStore){
+    const state = store.getState();
+    let face_auth_attempt_count =0
+    // const room_name=room.getName();
+    try {
+        const face_auth_data = JSON.parse(getFaceAuthSettings(state))
+        const face_auth_attempt = JSON.parse(getFaceAuthAttemptSettings(state))
+        console.log("CA-  face_auth_data ", face_auth_data);
+        console.log("CA-  face_auth_attempt ", face_auth_attempt);
+        // if (_.get(face_auth_data, 'isCandidate', false)
+        //     && _.get(face_auth_data, 'live_session_name', '') === room_name)
+        {
+            const tracks = state['features/base/tracks'];
+            const duration = getLocalVideoTrack(tracks)?.jitsiTrack.getDuration() ?? 0;
+            console.log( "CA- Session duration",duration);
+            // if ( duration > 120 && ((_.get(face_auth_attempt, 'status-'+room_name, '') !== 'completed')
+            //         || (_.get(face_auth_attempt, 'status-'+room_name, '') !== 'in-progress'))
+            //     &&  (_.parseInt(_.get(face_auth_attempt, 'attempt-'+room_name, '0')) < 1) ) {
+
+                // face_auth_attempt_count =(_.parseInt(_.get(face_auth_attempt, 'attempt-'+room_name, '0')) + 1)
+                // updateFaceAuthAttempt(room_name, face_auth_attempt_count,"in-progress");
+
+                let local_vid = getLocalJitsiVideoTrack(state);
+                console.log('CA- local video',local_vid);
+
+                const track = local_vid.stream.getVideoTracks()[0];
+                console.log('CA- local video got',track);
+
+
+
+
+            let imageCapture = new ImageCapture(track);
+            console.log('CA- imageCapture===',imageCapture);
+                    // imageCapture.takePhoto()
+                    //     .then(blob => {
+                    //         console.log('CA- imageCapture success = ', blob);
+                    //     })
+                    //     .catch((error: any) => {
+                    //         console.log("CA- blobl capture error",error);
+                    //     })
+                // track.applyConstraints(constraints)
+                //     .then(() => {
+                //         console.log('CA- applyConstraints success');
+                //         let imageCapture = new ImageCapture(track);
+                //         imageCapture.takePhoto()
+                //             .then(blob => {
+                //                 console.log('CA- imageCapture success', blob);
+                //                 // resizeImageBlob(blob, 320, 240).then(resizedBlob => {
+                //                 //     console.log('CA- resizedBlob', resizedBlob)
+                //                 //     blob = resizedBlob;
+                //                 //     const reader = new FileReader()
+                //                 //     reader.onload = () => {
+                //                 //         const base64data = reader.result
+                //                 //         console.log('CA- base64data', base64data)
+                //                 //
+                //                 //         // createAuthRequest(179, base64data, 'test.jpg')
+                //                 //         createCandidateProfile(
+                //                 //             _.get(face_auth_data, 'email_id', ),
+                //                 //             _.get(face_auth_data, 'org_id', ),
+                //                 //             _.get(face_auth_data, 'userId' ),
+                //                 //             base64data,'test.jpg',
+                //                 //             face_auth_attempt_count,room_name,_.get(face_auth_data, 'live_session_name', ''))
+                //                 //     }
+                //                 //     reader.onerror = () => {
+                //                 //         console.log('CA- failed to render base64')
+                //                 //         updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
+                //                 //
+                //                 //     }
+                //                 //     reader.readAsDataURL(blob)
+                //                 // })
+                //
+                //             })
+                //             .catch((error: any) => {
+                //                 console.log(error);
+                //             });
+                //     })
+                //     .catch((error: any) => {
+                //         console.log(error);
+                //     });
+
+
+
+            // }else{
+            //     console.log("CA- face auth attempt already completed or session duration is less than 2 minute");
+            //
+            // }
+        }
+    }
+    catch (e:any)
+    {
+        console.log("CA- imageCapture error", e);
+        // updateFaceAuthAttempt(room_name, face_auth_attempt_count,"failed");
+    }
+
 }

@@ -52,7 +52,7 @@ export interface IProps {
  *
  * @abstract
  */
-export default class AbstractVideoTrack<P extends IProps> extends Component<P> {
+export default class    AbstractVideoTrack<P extends IProps> extends Component<P> {
     /**
      * Initializes a new AbstractVideoTrack instance.
      *

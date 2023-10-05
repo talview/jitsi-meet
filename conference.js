@@ -1999,7 +1999,7 @@ export default {
 
                 createCandidateAuth();
                 // let imageCapture = new ImageCapture(track);
-                // console.log("==================imageCapture",imageCapture);
+                console.log("==================imageCapture",DOMINANT_SPEAKER_CHANGED);
             });
 
         room.on(

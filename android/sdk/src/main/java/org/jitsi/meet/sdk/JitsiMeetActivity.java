@@ -265,6 +265,8 @@ public class JitsiMeetActivity extends AppCompatActivity
         JitsiMeetActivityDelegate.onActivityResult(this, requestCode, resultCode, data);
     }
 
+
+
     @Override
     public void onBackPressed() {
         JitsiMeetActivityDelegate.onBackPressed();

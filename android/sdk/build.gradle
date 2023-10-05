@@ -80,7 +80,7 @@ dependencies {
     implementation project(':react-native-pager-view')
     implementation project(':react-native-performance')
     implementation project(':react-native-safe-area-context')
-    implementation project(':react-native-screens')
+    implementation project(':react-native-screens:')
     implementation project(':react-native-slider')
     implementation project(':react-native-sound')
     implementation project(':react-native-splash-screen')
