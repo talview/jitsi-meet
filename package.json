@@ -104,6 +104,7 @@
     "react-native-tab-view": "3.5.2",
     "react-native-url-polyfill": "2.0.0",
     "react-native-video": "6.0.0-alpha.7",
+    "react-native-view-shot": "3.3.0",
     "react-native-watch-connectivity": "1.1.0",
     "react-native-webrtc": "111.0.3",
     "react-native-webview": "13.5.1",
@@ -122,6 +123,7 @@
     "wasm-check": "2.0.1",
     "webm-duration-fix": "1.0.4",
     "windows-iana": "3.1.0",
+    "yarn": "^1.22.19",
     "zxcvbn": "4.4.2"
   },
   "devDependencies": {

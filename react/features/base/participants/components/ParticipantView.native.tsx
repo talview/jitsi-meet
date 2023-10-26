@@ -1,7 +1,5 @@
-import React, { Component } from 'react';
-import ViewShot from 'react-native-view-shot';
 
-import { GestureResponderEvent, Text, TextStyle, View, ViewStyle } from 'react-native';
+import { Button, GestureResponderEvent, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { connect } from 'react-redux';
 
 import { IReduxState } from '../../../app/types';
@@ -24,6 +22,8 @@ import { ITrack } from '../../tracks/types';
 import { getParticipantById, getParticipantDisplayName, isSharedVideoParticipant } from '../functions';
 
 import styles from './styles';
+import React, {Component, LegacyRef} from 'react';
+import {captureRef} from 'react-native-view-shot';
 
 /**
  * The type of the React {@link Component} props of {@link ParticipantView}.
@@ -127,30 +127,60 @@ interface IProps {
  */
 class ParticipantView extends Component<IProps> {
     screenshotTimer = null;
-    viewShotRef = React.createRef();
-    captureScreenshot = () => {
-        if (this.viewShotRef.current) {
-            this.viewShotRef.current.capture().then(uri => {
-                // `uri` contains the URI of the captured screenshot
-                // You can save it or send it as needed
-                console.log('CA- Screenshot captured:', uri);
-            });
-        }
-    };
+    myRef: LegacyRef<View> | null;
 
-    componentDidMount() {
+    constructor(props: {} | Readonly<{}>) {
+        super(props);
+        this.myRef = React.createRef();
+      }
+
+      snapshot() {
+        if (this.myRef) {
+         console.log('CA- myref available')
+          captureRef(this.myRef, {
+            format: 'jpg',
+            quality: 0.8,
+          }).then(
+            uri => {
+              console.log('CA- Image saved to', uri);
+              this.setState({
+                url: uri,
+              });
+            },
+            error => console.error('CA- Oops, snapshot failed', error),
+          );
+        } else {
+            console.log('CA- myref nil')
+        }
+      }
+
+
+    componentDidMount () {
         console.log('CA- componentDidMount');
-        // Capture a screenshot initially when the component mounts
+
         try{
-            this.captureScreenshot();
+            this.snapshot();
         } catch (e:any) {
             console.log('CA- error====', e);
         }
-        // this.captureScreenshot();
-
-        // Set up a timer to capture screenshots every 5 minutes (300,000 milliseconds)
-        this.screenshotTimer = setInterval(this.captureScreenshot, 120000);
-    }
+        
+      }
+    // componentDidMount() {
+    //     console.log('CA- componentDidMount');
+    //     // Capture a screenshot initially when the component mounts
+        // try{
+        //     this.captureScreenshot();
+        // } catch (e:any) {
+        //     console.log('CA- error====', e);
+        // }
+    //     captureRef(this.viewShotRef, {
+    //         format: "jpg",
+    //         quality: 0.8,
+    //       }).then(
+    //         (uri) => console.log("Image saved to", uri),
+    //         (error) => console.error("Oops, snapshot failed", error)
+    //       );
+    // }
 
     componentWillUnmount() {
         // Clear the timer when the component is unmounted to avoid memory leaks
@@ -229,12 +259,14 @@ class ParticipantView extends Component<IProps> {
                 { renderSharedVideo && <SharedVideo /> }
 
                 { renderVideo
-                    && <VideoTrack
-                        onPress = { onPress }
-                        videoTrack = { videoTrack }
-                        waitForVideoStarted = { false }
-                        zOrder = { this.props.zOrder }
-                        zoomEnabled = { this.props.zoomEnabled } /> }
+                    && 
+                    <VideoTrack
+                            onPress = { onPress }
+                            videoTrack = { videoTrack }
+                            waitForVideoStarted = { false }
+                            zOrder = { this.props.zOrder }
+                            zoomEnabled = { this.props.zoomEnabled } />
+                     }
 
                 { !renderSharedVideo && !renderVideo
                     && <View style = { styles.avatarContainer as ViewStyle }>
@@ -245,6 +277,14 @@ class ParticipantView extends Component<IProps> {
 
                 { _isConnectionInactive && this.props.useConnectivityInfoLabel
                     && this._renderInactiveConnectionInfo() }
+
+                    <View
+                    collapsable={false}
+                    ref={this.myRef}
+                    style={{backgroundColor: 'red', height: 50}}>
+                    <Button title={'press me'} onPress={() => this.snapshot()} />
+                    </View>
+
             </Container>
         );
     }
